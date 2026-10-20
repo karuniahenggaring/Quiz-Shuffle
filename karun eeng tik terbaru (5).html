@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Edukasi SMA Kelas 11</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 550px;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .subject-tag {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .timer-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        h2 {
+            margin-top: 10px;
+            color: #1e293b;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+        .option-btn, .menu-btn {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 2px solid #cbd5e1;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover, .menu-btn:hover {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .menu-btn {
+            text-align: center;
+            font-weight: bold;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+        .menu-btn.random-btn {
+            background-color: #fef3c7;
+            color: #b45309;
+            border-color: #fde68a;
+        }
+        .next-btn, .action-btn {
+            width: 100%;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .next-btn:hover, .action-btn:hover {
+            background-color: #059669;
+        }
+        .btn-secondary {
+            background-color: #64748b;
+        }
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+        .score-board {
+            text-align: center;
+        }
+        .score-board h3 {
+            font-size: 28px;
+            color: #10b981;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .dashboard-title {
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- DASHBOARD / HOME MENU -->
+    <div id="dashboard">
+        <h2 class="dashboard-title">Dashboard Kuis SMA Kelas 11</h2>
+        <p style="text-align: center; color: #64748b; margin-bottom: 20px;">Pilih Mata Pelajaran untuk Memulai Kuis:</p>
+        
+        <button class="menu-btn" onclick="startQuiz('Matematika')">📐 Matematika</button>
+        <button class="menu-btn" onclick="startQuiz('Biologi')">🧬 Biologi</button>
+        <button class="menu-btn" onclick="startQuiz('Fisika')">⚡ Fisika</button>
+        <button class="menu-btn" onclick="startQuiz('Sosiologi')">👥 Sosiologi</button>
+        <button class="menu-btn" onclick="startQuiz('Sejarah')">📜 Sejarah</button>
+        <button class="menu-btn random-btn" onclick="startQuiz('Acak')">🎲 Soal Acak (Semua Mapel)</button>
+    </div>
+
+    <!-- TAMPILAN KUIS -->
+    <div id="quiz-screen" class="hidden">
+        <div class="header-bar">
+            <div>
+                <span id="question-number" style="color: #64748b; font-weight: bold; margin-right: 8px;">Soal 1/5</span>
+                <span id="subject-tag" class="subject-tag">Mata Pelajaran</span>
+            </div>
+            <div class="timer-badge">Waktu: <span id="time-left">20</span>s</div>
+        </div>
+        
+        <div id="quiz-header">
+            <h2 id="question">Pertanyaan akan muncul di sini...</h2>
+            <ul class="options-list" id="options"></ul>
+        </div>
+        <button class="next-btn" id="next-btn" style="display:none;" onclick="nextQuestion()">Lanjut Pertanyaan</button>
+    </div>
+
+    <!-- TAMPILAN SKOR -->
+    <div id="score-screen" class="hidden">
+        <div class="score-board">
+            <h2>Kuis Selesai!</h2>
+            <p>Skor Akhir Anda:</p>
+            <h3 id="final-score">0 / 100</h3>
+            <p style="color: #64748b;" id="score-detail"></p>
+            <button class="action-btn" onclick="restartCurrentQuiz()">Coba Lagi Mapel Ini</button>
+            <button class="action-btn btn-secondary" onclick="showDashboard()">Kembali ke Dashboard</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bank Soal Lengkap
+    const allQuizData = [
+        // Matematika
+        { subject: "Matematika", question: "Suku ke-10 dari barisan aritmatika 3, 7, 11, 15, ... adalah...", options: ["35", "37", "39", "41"], answer: 2 },
+        { subject: "Matematika", question: "Jumlah 5 suku pertama dari deret geometri 2, 4, 8, 16, ... adalah...", options: ["30", "62", "64", "126"], answer: 1 },
+        { subject: "Matematika", question: "Turunan pertama dari f(x) = 3x² + 5x - 7 adalah...", options: ["6x + 5", "3x + 5", "6x - 7", "6x² + 5"], answer: 0 },
+        
+        // Biologi
+        { subject: "Biologi", question: "Organel sel yang berfungsi sebagai tempat terjadinya respirasi seluler dan penghasil energi (ATP) adalah...", options: ["Ribosom", "Mitolondria", "Lisosom", "Badan Golgi"], answer: 1 },
+        { subject: "Biologi", question: "Jaringan pada tumbuhan yang berfungsi mengangkut air dan garam mineral dari akar ke daun adalah...", options: ["Floem", "Xilem", "Parenkim", "Epidermis"], answer: 1 },
+        { subject: "Biologi", question: "Proses pertukaran gas O2 dan CO2 pada paru-paru manusia terjadi di bagian...", options: ["Bronkus", "Bronkiolus", "Alveolus", "Trakea"], answer: 2 },
+
+        // Fisika
+        { subject: "Fisika", question: "Hukum Hooke menyatakan bahwa pertambahan panjang benda berbanding lurus dengan gaya. Rumus Hukum Hooke adalah...", options: ["F = m × a", "F = k × Δx", "P = F / A", "E = m × g × h"], answer: 1 },
+        { subject: "Fisika", question: "Besaran yang menyatakan besarnya gaya yang bekerja pada suatu benda per satuan luas adalah...", options: ["Regangan", "Tegangan (Stress)", "Modulus Young", "Momen Gaya"], answer: 1 },
+        { subject: "Fisika", question: "Suhu suatu benda jika diukur dengan termometer Celcius menunjukkan 40°C. Jika diukur dengan Reamur adalah...", options: ["32°R", "48°R", "50°R", "80°R"], answer: 0 },
+
+        // Sosiologi
+        { subject: "Sosiologi", question: "Proses sosial ketika kelompok dengan latar budaya berbeda saling berinteraksi hingga membentuk budaya baru tanpa menghilangkan budaya asli disebut...", options: ["Asimilasi", "Akulturasi", "Amalgamasi", "Diffusi"], answer: 1 },
+        { subject: "Sosiologi", question: "Konflik yang terjadi antara kelompok pekerja dan pemilik perusahaan termasuk ke dalam jenis konflik...", options: ["Intersuku", "Antagenerasi", "Kelas sosial", "Internasional"], answer: 2 },
+        { subject: "Sosiologi", question: "Perubahan sosial yang terjadi secara lambat dan memerlukan waktu yang lama disebut...", options: ["Evolusi", "Revolusi", "Inovasi", "Modernisasi"], answer: 0 },
+
+        // Sejarah
+        { subject: "Sejarah", question: "Tokoh yang memimpin Perang Diponegoro (1825-1830) melawan pemerintah kolonial Hindia Belanda adalah...", options: ["Pangeran Diponegoro", "Sultan Hasanuddin", "Tuanku Imam Bonjol", "Pangeran Antasari"], answer: 0 },
+        { subject: "Sejarah", question: "Organisasi pergerakan nasional pertama di Indonesia yang didirikan pada tahun 1908 adalah...", options: ["Indische Partij", "Sikat Islam", "Budi Utomo", "PNI"], answer: 2 },
+        { subject: "Sejarah", question: "Tujuan utama kedatangan bangsa Portugis ke Indonesia dengan semboyan 3G adalah...", options: ["Gold, Glory, Gospel", "Good, Gold, Great", "God, Glory, Giant", "Gold, Garden, Growth"], answer: 0 }
+    ];
+
+    const TIME_LIMIT = 20; 
+    let activeQuestions = [];
+    let currentQuiz = 0;
+    let score = 0;
+    let selectedAnswer = null;
+    let timeLeft = TIME_LIMIT;
+    let timerInterval = null;
+    let currentSelectedSubject = '';
+
+    const dashboardEl = document.getElementById('dashboard');
+    const quizScreenEl = document.getElementById('quiz-screen');
+    const scoreScreenEl = document.getElementById('score-screen');
+    
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const nextBtn = document.getElementById('next-btn');
+    const timeLeftEl = document.getElementById('time-left');
+    const questionNumberEl = document.getElementById('question-number');
+    const subjectTagEl = document.getElementById('subject-tag');
+
+    function startQuiz(subject) {
+        currentSelectedSubject = subject;
+        
+        // Filter soal berdasarkan mapel / acak
+        if (subject === 'Acak') {
+            activeQuestions = [...allQuizData];
+        } else {
+            activeQuestions = allQuizData.filter(q => q.subject === subject);
+        }
+
+        // Acak urutan soal
+        activeQuestions.sort(() => Math.random() - 0.5);
+
+        currentQuiz = 0;
+        score = 0;
+
+        dashboardEl.classList.add('hidden');
+        scoreScreenEl.classList.add('hidden');
+        quizScreenEl.classList.remove('hidden');
+
+        loadQuiz();
+    }
+
+    function startTimer() {
+        timeLeft = TIME_LIMIT;
+        timeLeftEl.innerText = timeLeft;
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timeLeftEl.innerText = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                nextQuestion();
+            }
+        }, 1000);
+    }
+
+    function loadQuiz() {
+        selectedAnswer = null;
+        nextBtn.style.display = 'none';
+        
+        const currentData = activeQuestions[currentQuiz];
+        questionNumberEl.innerText = `Soal ${currentQuiz + 1}/${activeQuestions.length}`;
+        subjectTagEl.innerText = currentData.subject;
+        questionEl.innerText = currentData.question;
+        
+        optionsEl.innerHTML = '';
+        currentData.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.classList.add('option-btn');
+            button.innerText = option;
+            button.onclick = () => selectOption(index, button);
+            optionsEl.appendChild(button);
+        });
+
+        startTimer();
+    }
+
+    function selectOption(index, button) {
+        const buttons = optionsEl.querySelectorAll('.option-btn');
+        buttons.forEach(btn => {
+            btn.style.backgroundColor = '#f8fafc';
+            btn.style.color = 'black';
+        });
+
+        button.style.backgroundColor = '#3b82f6';
+        button.style.color = 'white';
+        
+        selectedAnswer = index;
+        nextBtn.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        clearInterval(timerInterval);
+
+        if (selectedAnswer === activeQuestions[currentQuiz].answer) {
+            score++;
+        }
+
+        currentQuiz++;
+
+        if (currentQuiz < activeQuestions.length) {
+            loadQuiz();
+        } else {
+            showScore();
+        }
+    }
+
+    function showScore() {
+        quizScreenEl.classList.add('hidden');
+        scoreScreenEl.classList.remove('hidden');
+
+        const finalScore = Math.round((score / activeQuestions.length) * 100);
+        document.getElementById('final-score').innerText = `${finalScore} / 100`;
+        document.getElementById('score-detail').innerText = `(Menjawab benar ${score} dari ${activeQuestions.length} soal)`;
+    }
+
+    function restartCurrentQuiz() {
+        startQuiz(currentSelectedSubject);
+    }
+
+    function showDashboard() {
+        clearInterval(timerInterval);
+        scoreScreenEl.classList.add('hidden');
+        quizScreenEl.classList.add('hidden');
+        dashboardEl.classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
